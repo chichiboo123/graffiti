@@ -3,59 +3,67 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>모두를 위한 그래피티 | Graffiti for Everyone</title>
+<title>모두를 위한 그래피티 | Unified (PC/Mobile)</title>
 
 <link rel="preload" href="https://i.ibb.co/VWmDfBb4/001-5.png" as="image">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Jua&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
 
 <style>
-  :root{ --card:#fff; --muted:#6b7280; --shadow:0 8px 24px rgba(2,6,23,.08); --border:#e5e7eb; }
-  *{box-sizing:border-box}
-  body{ margin:0; background:linear-gradient(145deg,#fdf2f8,#eff6ff);
+  :root{ --card:#fff; --muted:#6b7280; --shadow:0 8px 24px rgba(2,6,23,.08); --border:#e5e7eb;
+         --accent-bg:#fff7ed; --accent-border:#fed7aa; --danger-bg:#fff1f2; --danger-border:#fecdd3; --ghost-bg:#f8fafc; --ghost-border:#e2e8f0;
+         --primary:#3b82f6; --primary-hover:#2563eb; }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:linear-gradient(145deg,#fdf2f8,#eff6ff);
     font-family:"Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    color:#0f172a; min-height:100vh; display:flex; flex-direction:column; }
+    color:#0f172a; min-height:100vh; display:flex; flex-direction:column;
+  }
   header{ display:flex; align-items:center; padding:12px 16px 6px; }
   .logo-btn{ display:inline-flex; align-items:center; text-decoration:none; }
   .logo-img{ height:96px; width:auto; display:block; }
   @media (max-width:768px){ .logo-img{ height:72px; } }
 
-  /* 모드 선택 */
-  #modePicker{ position:fixed; inset:0; display:grid; place-items:center;
+  /* 공통 픽커 */
+  #modePicker, #devicePicker{
+    position:fixed; inset:0; display:grid; place-items:center;
     background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.96));
-    backdrop-filter:blur(6px); z-index:1000; transition:opacity .18s ease; }
-  #modePicker.hide{ opacity:0; pointer-events:none; }
-  .picker-wrap{ position:relative; z-index:1001; pointer-events:auto;
-    display:grid; gap:28px; justify-items:center; width:min(980px,94vw); }
-  .picker-logo img{ height:min(49vh, 504px); width:auto; display:block; }
-  .picker-card{ width:100%; background:var(--card); border-radius:24px; padding:26px; box-shadow:var(--shadow);}
-  .picker-title{ font-family:"Jua",sans-serif; font-size:26px; margin:0 0 14px; text-align:center;}
-  .picker-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch; }
+    backdrop-filter:blur(6px); z-index:1000; transition:opacity .18s ease;
+    padding:16px;
+  }
+  #modePicker.hide, #devicePicker.hide{ opacity:0; pointer-events:none; }
+  .picker-wrap{ position:relative; z-index:1001; pointer-events:auto; display:grid; gap:24px; justify-items:center; width:min(980px, 100%); }
+  .picker-logo img{ max-height:40vh; width:auto; display:block; }
+  .picker-card{ width:100%; background:var(--card); border-radius:24px; padding:24px; box-shadow:var(--shadow); }
+  .picker-title{ font-family:"Jua",sans-serif; font-size:24px; margin:0 0 14px; text-align:center; }
+  .picker-grid{ display:grid; grid-template-columns:1fr; gap:16px; }
   .pick{
-    background:#fff; border:2px dashed var(--border); border-radius:20px; padding:22px; cursor:pointer;
+    background:#fff; border:2px dashed var(--border); border-radius:20px; padding:20px; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
     transition:.15s; user-select:none; text-align:center; min-height:120px;
   }
-  .pick:hover{ border-color:#fda4af; transform:translateY(-1px); }
+  .pick:hover{ border-color:#fda4af; transform:translateY(-2px); }
   .pick .em{ font-family:"Jua",sans-serif; font-size:18px;}
-  .pick small{ color:var(--muted); display:block; margin-top:4px; }
   .emoji{ width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%, #fde68a, #86efac);font-size:28px;}
   .picker-footer{ margin-top:12px; text-align:center; font-size:12px; color:var(--muted); }
   .picker-footer a{ color:inherit; text-decoration:underline; }
+  @media (min-width:768px){ .picker-grid{ grid-template-columns:1fr 1fr; } }
 
-  .app{ display:grid; grid-template-columns:320px 1fr; gap:14px; padding:0 16px 16px;}
+  /* 데스크톱 기본 레이아웃 */
+  .app{ display:grid; grid-template-columns:320px 1fr; gap:14px; padding:0 16px 16px; }
   @media (max-width:1100px){ .app{ grid-template-columns:1fr; } }
   aside, main{ background:#fff; border-radius:24px; box-shadow:var(--shadow); }
   aside{ padding:14px; }
   main{ padding:12px; overflow:hidden; }
 
-  .toolbar{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
-  .title-mini{ font-family:"Jua"; font-size:16px; padding:8px 12px; background:#fff; border:1px solid var(--border); border-radius:12px; }
-  button{ appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700; transition:.15s;}
+  .toolbar{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; position:relative; }
+  .title-mini{ font-family:"Jua"; font-size:16px; padding:8px 12px; background:#fff; border:1px solid var(--border); border-radius:12px; cursor:pointer; }
+  button{ appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700; transition:.15s; }
   button:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(2,6,23,.06); }
-  .btn-accent{ background:#fff7ed; border-color:#fed7aa; }
-  .btn-danger{ background:#fff1f2; border-color:#fecdd3; }
-  .btn-ghost{ background:#f8fafc; border-color:#e2e8f0; }
+  .btn-accent{ background:var(--accent-bg); border-color:var(--accent-border); }
+  .btn-danger{ background:var(--danger-bg); border-color:var(--danger-border); }
+  .btn-ghost{ background:var(--ghost-bg); border-color:var(--ghost-border); }
 
   .group{ background:#fff; border:1px solid #f1f5f9; border-radius:16px; padding:12px; margin-bottom:12px;}
   .group h3{ margin:0; font-family:"Jua"; font-size:18px;}
@@ -63,10 +71,7 @@
   .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
   .row.center{ justify-content:center; }
   .chip{ padding:8px 11px; border-radius:999px; border:1px solid var(--border); background:#fff; cursor:pointer; }
-  .chip.active{
-    outline: 2px solid #fde68a;
-    outline-offset: 2px;
-  }
+  .chip.active{ outline:2px solid #fde68a; outline-offset: 2px; }
   .hint{ font-size:12px; color:#6b7280; }
   .vspace{ margin-top:10px; } .vspace-lg{ margin-top:14px; }
 
@@ -104,64 +109,91 @@
   .grad-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center; }
   .grad-row label{ font-size:12px; color:#334155; }
 
-  /* Collapsible Section Styles */
-  .toggle-header {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none; /* Prevent text selection on click */
+  /* Collapsible */
+  .toggle-header { cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
+  .toggle-arrow { transition: transform 0.2s ease; font-size:14px; margin-left:8px; }
+  .group.collapsed .toggle-arrow { transform: rotate(-90deg); }
+  .collapsible-content { max-height:1000px; overflow:hidden; transition:max-height .4s ease, margin-top .4s ease; margin-top:10px; }
+  .group.collapsed .collapsible-content { max-height:0; margin-top:0; overflow:hidden; }
+
+  /* ========= 모바일 레이아웃(좌측 세로 툴바로 변경) ========= */
+  body.mobile-layout{ overflow:hidden; }
+  body.mobile-layout .app{ display:flex; flex-direction:column; flex-grow:1; min-height:0; position:relative; padding:0; gap:0; }
+  body.mobile-layout main{ flex-grow:1; padding:0 12px 12px; min-height:0; display:flex; align-items:center; justify-content:center; background:transparent; border-radius:0; box-shadow:none; }
+
+  /* 좌측 세로 패널 (슬라이드 인/아웃) */
+  body.mobile-layout aside{
+    position:fixed; top:0; bottom:0; left:0;
+    width:min(360px, 86vw);
+    background:var(--card);
+    border-top-right-radius:24px; border-bottom-right-radius:24px;
+    box-shadow:12px 0 32px rgba(2,6,23,.12);
+    padding:16px 14px; overflow-y:auto; z-index:500;
+    transform:translateX(-100%); transition:transform .3s cubic-bezier(.4,0,.2,1);
+    -webkit-overflow-scrolling:touch;
   }
-  .toggle-arrow {
-    transition: transform 0.2s ease;
-    font-size: 14px;
-    margin-left: 8px;
+  body.mobile-layout aside.open{ transform:translateX(0); }
+
+  /* 모바일 툴 토글 버튼(좌측 하단) */
+  #controlsToggleBtn{
+    position:fixed; bottom:24px; left:16px; width:56px; height:56px; border-radius:50%;
+    background:var(--primary); color:#fff; font-size:28px; display:none; place-items:center; border:none;
+    box-shadow:0 8px 20px rgba(0,0,0,.2); cursor:pointer; z-index:501; transition:transform .2s ease;
   }
-  .group.collapsed .toggle-arrow {
-    transform: rotate(-90deg);
+  #controlsToggleBtn:hover{ background:var(--primary-hover); transform:scale(1.05); }
+  body.mobile-layout #controlsToggleBtn{ display:grid; } /* 모바일 모드에서만 보이게 */
+
+  /* 데스크톱 강제 스타일(모바일 클래스 아닐 때) */
+  body.desktop-layout .app{ padding:0 16px 16px; gap:14px; }
+  body.desktop-layout main{ background:#fff; border-radius:24px; box-shadow:var(--shadow); }
+  body.desktop-layout footer{ display:block; }
+  body.mobile-layout footer{ display:none; }
+
+  /* 모드 선택 드롭다운 메뉴 */
+  .mode-menu{
+    position:absolute; top:42px; left:0; width:280px; background:#fff; border:1px solid var(--border);
+    border-radius:12px; box-shadow:var(--shadow); padding:8px; z-index:20; display:none;
   }
-  .collapsible-content {
-    max-height: 1000px; /* A large enough value to not clip content */
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out;
-    margin-top: 10px;
+  .mode-menu.open{ display:block; }
+  .mode-menu .item{
+    width:100%; display:flex; gap:8px; align-items:center; text-align:left;
+    border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:10px; margin-bottom:8px; cursor:pointer;
   }
-  .group.collapsed .collapsible-content {
-    max-height: 0;
-    margin-top: 0;
-    overflow: hidden;
+  .mode-menu .item:last-child{ margin-bottom:0; }
+  .mode-menu .tag{ font-size:12px; color:#64748b; }
+
+  /* 모바일: 캔버스 모드 빈 화면 방지 */
+  body.mobile-layout #dualStage{ width:100%; max-width:100%; display:grid; grid-template-columns:1fr; }
+  body.mobile-layout #singleStage{ width:100%; }
+  body.mobile-layout .stage{ width:100%; }
+  @media (min-width:768px){
+    body.mobile-layout #dualStage{ grid-template-columns:1fr 1fr; }
   }
 </style>
 </head>
-<body>
+<body class="desktop-layout">
   <header>
     <a href="#" id="logoBtn" class="logo-btn" aria-label="홈으로">
       <img class="logo-img" src="https://i.ibb.co/VWmDfBb4/001-5.png" alt="모두를 위한 그래피티 로고" />
     </a>
   </header>
 
-  <!-- 모드 선택 -->
-  <div id="modePicker" aria-hidden="false">
+  <!-- 1단계: 디바이스 선택 -->
+  <div id="devicePicker" aria-hidden="false">
     <div class="picker-wrap">
       <div class="picker-logo">
         <img src="https://i.ibb.co/VWmDfBb4/001-5.png" alt="모두를 위한 그래피티" />
       </div>
       <div class="picker-card">
-        <h2 class="picker-title">어떤 모드로 시작할까요?</h2>
+        <h2 class="picker-title">어떤 기기로 사용할까요?</h2>
         <div class="picker-grid">
-          <button class="pick" data-mode="video">
-            <div class="emoji">🎥</div>
-            <div>
-              <div class="em">영상 위에 바로 그리기</div>
-              <small>웹캠 영상 위에 곧바로 드로잉</small>
-            </div>
+          <button class="pick" data-device="desktop">
+            <div class="emoji">🖥️</div>
+            <div><div class="em">PC / 노트북</div></div>
           </button>
-          <button class="pick" data-mode="canvas">
-            <div class="emoji">🖌️</div>
-            <div>
-              <div class="em">캔버스에 그리기</div>
-              <small>배경(단색/그라데이션/이미지) 위에 드로잉</small>
-            </div>
+          <button class="pick" data-device="mobile">
+            <div class="emoji">📱</div>
+            <div><div class="em">태블릿 / 스마트폰</div></div>
           </button>
         </div>
         <div class="picker-footer">
@@ -171,13 +203,48 @@
     </div>
   </div>
 
+  <!-- 2단계: 모드 선택 -->
+  <div id="modePicker" class="hide" aria-hidden="true">
+    <div class="picker-wrap">
+      <div class="picker-logo">
+        <img src="https://i.ibb.co/VWmDfBb4/001-5.png" alt="모두를 위한 그래피티" />
+      </div>
+      <div class="picker-card">
+        <h2 class="picker-title">어떤 모드로 시작할까요?</h2>
+        <div class="picker-grid">
+          <button class="pick" data-mode="video">
+            <div class="emoji">🎥</div>
+            <div><div class="em">영상 위에 바로 그리기</div></div>
+          </button>
+          <button class="pick" data-mode="canvas">
+            <div class="emoji">🖌️</div>
+            <div><div class="em">캔버스에 그리기</div></div>
+          </button>
+        </div>
+        <div class="picker-footer">
+          <a href="https://litt.ly/chichiboo" target="_blank" rel="noopener">created by. 교육뮤지컬 꿈꾸는 치수쌤</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 앱 -->
   <div class="app" style="display:none" id="app">
     <aside>
-      <div class="toolbar">
+      <div class="toolbar" id="toolbar">
         <span class="title-mini" id="modeLabel">모드: -</span>
-        <button class="btn-accent" id="changeMode">모드 변경</button>
+        <button class="btn-accent" id="modeChangeBtn">모드 변경</button>
         <span class="hint" id="status" style="flex-grow: 1; text-align: right;">준비 중…</span>
+
+        <!-- 드롭다운: 4가지 모드 -->
+        <div id="modeMenu" class="mode-menu" role="menu" aria-hidden="true">
+          <button class="item" data-go="desktop:video">🖥️ [PC/노트북] <strong>영상 위에 바로 그리기</strong><div class="tag">사이드바</div></button>
+          <button class="item" data-go="desktop:canvas">🖥️ [PC/노트북] <strong>캔버스에 그리기</strong><div class="tag">사이드바</div></button>
+          <button class="item" data-go="mobile:video">📱 [태블릿/스마트폰] <strong>영상 위에 바로 그리기</strong><div class="tag">좌측 툴바</div></button>
+          <button class="item" data-go="mobile:canvas">📱 [태블릿/스마트폰] <strong>캔버스에 그리기</strong><div class="tag">좌측 툴바</div></button>
+        </div>
       </div>
+
       <div class="toolbar vspace">
           <button id="expandAllBtn" class="btn-ghost" style="flex-grow: 1;">전체 펼치기</button>
           <button id="collapseAllBtn" class="btn-ghost" style="flex-grow: 1;">전체 접기</button>
@@ -319,6 +386,9 @@
         </div>
       </div>
     </main>
+
+    <!-- 모바일 전용(좌측 패널 토글) -->
+    <button id="controlsToggleBtn" aria-label="컨트롤 패널 열기">🎨</button>
   </div>
 
   <footer>
@@ -327,15 +397,18 @@
 
 <script>
 (() => {
-  // A self-invoking anonymous function to encapsulate the entire script,
-  // preventing pollution of the global namespace.
-  const isMobile=matchMedia("(max-width: 768px)").matches;
-  const AIR_H=isMobile?120:110; // Height of the "airbar" UI at the top
-  const OUT_W=1280, OUT_H=720; // Output resolution for canvases
-  const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s); // Shorthand for querySelector
+  const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 
-  // --- DOM Element References ---
-  const picker=$("#modePicker"), app=$("#app");
+  // ===== 레이아웃/상태 =====
+  let layout = 'desktop';          // 'desktop' | 'mobile'
+  let isMobileLayout = false;
+  let AIR_H = 110;
+  const OUT_W=1280, OUT_H=720;
+
+  // DOM
+  const devicePicker=$("#devicePicker"), modePicker=$("#modePicker"), app=$("#app");
+  const aside = document.querySelector('aside');
+  const controlsToggleBtn = $("#controlsToggleBtn");
   const modeLabel=$("#modeLabel"), statusEl=$("#status");
   const singleStage=$("#singleStage"), dualStage=$("#dualStage");
   const video=$("#video"), video2=$("#video2");
@@ -344,30 +417,59 @@
   const oVid=overlayVideo.getContext('2d'), oCam=overlayCam.getContext('2d'), oDraw=overlayDraw.getContext('2d');
   const videoControls=$("#videoControls");
   const mirrorToggle=$("#mirrorToggle"), camToggle=$("#camToggle");
-  const recCanvas=document.createElement('canvas'); const rCtx=recCanvas.getContext('2d'); // Offscreen canvas for recording
+  const recCanvas=document.createElement('canvas'); const rCtx=recCanvas.getContext('2d');
   const bgCtx=bgCanvas.getContext('2d'), dCtx=drawCanvas.getContext('2d');
   const bgCtx2=bgCanvas2.getContext('2d'), dCtx2=drawCanvas2.getContext('2d');
   const copyMsg=$("#copyMsg");
 
-  // --- State Variables ---
+  // 모드 메뉴
+  const modeChangeBtn = $("#modeChangeBtn");
+  const modeMenu = $("#modeMenu");
+
+  // 앱 상태
   let mode=null, mirror=true, videoVisible=true;
   let stream=null, hands=null, handLoopId=null, handBusy=false;
-  let lastHandsTs=0, watchdog=null; // For hand tracking stability
+  let lastHandsTs=0, watchdog=null;
 
   let brush='pen', brushSize=10, brushColor='#000000', sprayDensity=35;
 
-  // --- Color Palettes ---
   const pastel3=['#fde68a','#a7f3d0','#bfdbfe'];
   const bgPaletteColors=['#ffffff','#000000',...pastel3,'custom'];
   const brushPaletteColors=['#000000','#ffffff','#ff3b3b','#7c3aed','#22c55e','#facc15','custom'];
   const airColors=['#000000','#ffffff','#ff3b3b','#7c3aed','#22c55e','#facc15'];
 
-  // --- Hand Gesture Thresholds ---
+  // 제스처 임계치
   let sens=0.7, pinchOn=0.65, pinchOff=0.74;
   function updateThreshold(){ pinchOn=0.30+sens*0.45; pinchOff=Math.min(pinchOn+0.07,0.92); } updateThreshold();
 
-  /* ========= Drawing Logic ========= */
-  const ema=Array(21).fill(null); const ALPHA=0.45; // EMA for smoothing landmarks
+  // ===== 레이아웃 적용 =====
+  function applyLayout(next){
+    layout = next;
+    isMobileLayout = (layout === 'mobile');
+    document.body.classList.toggle('mobile-layout', isMobileLayout);
+    document.body.classList.toggle('desktop-layout', !isMobileLayout);
+    AIR_H = isMobileLayout ? 120 : 110;
+    document.querySelectorAll('.airbar-bg').forEach(el=>el.style.setProperty('--airh', AIR_H+'px'));
+    if (!isMobileLayout) aside.classList.remove('open');
+  }
+
+  // ===== 모바일 컨트롤 열고닫기 =====
+  function closeControlsOnMobile(){
+    if(isMobileLayout) aside.classList.remove('open');
+  }
+  controlsToggleBtn.addEventListener('click', ()=> {
+    if(!isMobileLayout) return;
+    aside.classList.toggle('open');
+  });
+  app.addEventListener('click', (e)=>{
+    if(!isMobileLayout) return;
+    if(aside.classList.contains('open') && !aside.contains(e.target) && e.target!==controlsToggleBtn){
+      closeControlsOnMobile();
+    }
+  });
+
+  // ===== 드로잉 로직 =====
+  const ema=Array(21).fill(null); const ALPHA=0.45;
   const smoothLm=lm=>lm.map((p,i)=>{ if(!ema[i]) ema[i]={x:p.x,y:p.y,z:p.z||0};
     ema[i].x=ALPHA*p.x+(1-ALPHA)*ema[i].x; ema[i].y=ALPHA*p.y+(1-ALPHA)*ema[i].y; ema[i].z=ALPHA*(p.z||0)+(1-ALPHA)*ema[i].z; return {...ema[i]}; });
 
@@ -400,7 +502,7 @@
       ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(1,brushSize*0.4),0,Math.PI*2); ctx.fill(); ctx.restore(); }
     pushHistory(); path=[]; drawingCtx=null; }
 
-  /* ========= Undo/Redo History ========= */
+  // Undo/Redo
   const MAX_HISTORY=25, hist={ video:[], canvas:[], redoV:[], redoC:[] };
   const activeCtx=()=> mode==='video'?dCtx:dCtx2;
   const activeCanvas=()=> mode==='video'?drawCanvas:drawCanvas2;
@@ -414,9 +516,9 @@
   async function redo(){ const redoS=(mode==='video')?hist.redoV:hist.redoC; if(!redoS.length) return; const img=redoS.pop(); (mode==='video'?hist.video:hist.canvas).push(img); await applyDataURL(activeCtx(), img); }
   $("#undoBtn").onclick=undo; $("#redoBtn").onclick=redo;
 
-  /* ========= Palette & Background Controls ========= */
+  // 팔레트/배경
   const buildPalette=(el, colors, onPick)=>{ el.innerHTML=''; colors.forEach(c=>{ const n=document.createElement('button'); n.type='button'; n.className='swatch';
-      n.style.background=(c==='custom')?'linear-gradient(135deg,#f1f5f9,#e2e8f0)':c; n.title=(c==='custom')?'사용자 지정':c; n.onclick=()=>onPick(c); el.appendChild(n); }); };
+      n.style.background=(c==='custom')?'linear-gradient(135deg,#f1f5f9,#e2e8f0)':c; n.title=(c==='custom')?'사용자 지정':c; n.onclick=()=>{ onPick(c); if(isMobileLayout) closeControlsOnMobile(); }; el.appendChild(n); }); };
   buildPalette($("#bgPalette"), bgPaletteColors, (c)=>{ const col=(c==='custom')?$("#bgCustom").value:c;
     if(bgType==='solid'){ fillBackground(bgCtx,col); fillBackground(bgCtx2,col); }
     else if(bgType==='gradient'){ if(lastGradientEdited==='start'){ gradStart=col; $("#gradStart").value=gradStart; } else { gradEnd=col; $("#gradEnd").value=gradEnd; } fillGradient(bgCtx,gradStart,gradEnd); fillGradient(bgCtx2,gradStart,gradEnd); }});
@@ -446,6 +548,7 @@
       img.classList.add('sel'); const im=new Image(); im.crossOrigin='anonymous';
       im.onload=()=>{ bgImage=im; drawBgImage(bgCtx,im); drawBgImage(bgCtx2,im); };
       im.src=img.getAttribute('data-src') || img.src;
+      if(isMobileLayout) closeControlsOnMobile();
     });
   }
   $("#imgThumbs").querySelectorAll('img').forEach(bindThumb);
@@ -466,34 +569,26 @@
       $("#imgThumbs").querySelectorAll('img').forEach(i=>i.classList.remove('sel'));
       thumb.classList.add('sel');
       document.querySelector('[data-bgtype="image"]').click();
+      if(isMobileLayout) closeControlsOnMobile();
     };
     reader.readAsDataURL(file); e.target.value='';
   });
 
   $("#applyBg").onclick=()=>{ if(bgType==='solid'){ fillBackground(bgCtx,$("#bgCustom").value); fillBackground(bgCtx2,$("#bgCustom").value); }
     else if(bgType==='gradient'){ fillGradient(bgCtx,gradStart,gradEnd); fillGradient(bgCtx2,gradStart,gradEnd); }
-    else if(bgType==='image' && bgImage){ drawBgImage(bgCtx,bgImage); drawBgImage(bgCtx2,bgImage); } };
-  $("#clearDraw").onclick=()=>{ dCtx.clearRect(0,0,OUT_W,OUT_H); dCtx2.clearRect(0,0,OUT_W,OUT_H); pushHistory(); };
+    else if(bgType==='image' && bgImage){ drawBgImage(bgCtx,bgImage); drawBgImage(bgCtx2,bgImage); }
+    if(isMobileLayout) closeControlsOnMobile();
+  };
+  $("#clearDraw").onclick=()=>{ dCtx.clearRect(0,0,OUT_W,OUT_H); dCtx2.clearRect(0,0,OUT_W,OUT_H); pushHistory(); if(isMobileLayout) closeControlsOnMobile(); };
 
-  /* ========= Brush Controls ========= */
-  function updateBrushUI() {
-      $$('#brushRow .brush-chip').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.brush === brush);
-      });
-  }
-  
-  $('#brushRow').addEventListener('click', (e) => {
-      const btn = e.target.closest('.brush-chip');
-      if (!btn) return;
-      brush = btn.dataset.brush;
-      updateBrushUI();
-  });
-
+  // 브러시 컨트롤
+  function updateBrushUI(){ $$('#brushRow .brush-chip').forEach(btn=>{ btn.classList.toggle('active', btn.dataset.brush===brush); }); }
+  $('#brushRow').addEventListener('click',(e)=>{ const btn=e.target.closest('.brush-chip'); if(!btn) return; brush=btn.dataset.brush; updateBrushUI(); if(isMobileLayout) closeControlsOnMobile(); });
   $("#thickness").addEventListener('input',e=>{ brushSize=+e.target.value; $("#thickVal").textContent=brushSize; });
   $("#brushCustom").addEventListener('input',e=>{ brushColor=e.target.value; });
   $("#pinchSens").addEventListener('input',e=>{ sens=+e.target.value/100; $("#sensVal").textContent=e.target.value; updateThreshold(); });
 
-  /* ========= Airbar & Overlay Drawing ========= */
+  // 에어바
   const brushesAir=['pen','brush','spray','eraser','reset']; let airLayout=null;
   function rrect(ctx,x,y,w,h,r=10){const rr=Math.max(0,Math.min(r,Math.min(w,h)/2)); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr); ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
   function drawBrushIcon(ctx,type,x,y,w,h,active){
@@ -509,9 +604,9 @@
   }
   function drawAirbar(ctx){
     const by=26, gap=10, gapGroups=20;
-    const bw=isMobile?64:60, bh=50;
+    const bw=isMobileLayout?64:60, bh=50;
     const toolsW = brushesAir.length*bw + (brushesAir.length-1)*gap;
-    const cw=isMobile?46:44, colorsW = airColors.length*cw + (airColors.length-1)*gap;
+    const cw=isMobileLayout?46:44, colorsW = airColors.length*cw + (airColors.length-1)*gap;
     const totalW = toolsW + gapGroups + colorsW;
     const sx = (OUT_W - totalW)/2;
 
@@ -545,7 +640,7 @@
     return null;
   }
 
-  /* ========= Hand Gesture Logic ========= */
+  // 제스처
   let resetConfirm=false, confirmButtons=null;
   let pinching=false, pinchWas=false, pinchXY=null, lastLm=null;
   let airCooldown=0, inputLockUntil=0;
@@ -553,11 +648,10 @@
   let fistWas=false, glowUntil=0, glowPos=null;
   const brushCycle=['pen','brush','spray','eraser'];
   function cycleBrush(){
-      const i=brushCycle.indexOf(brush);
-      brush = brushCycle[(i+1)%brushCycle.length];
-      updateBrushUI();
+    const i=brushCycle.indexOf(brush);
+    brush = brushCycle[(i+1)%brushCycle.length];
+    updateBrushUI();
   }
-
   function isFist(lm){
     const dist01 = Math.hypot(lm[0].x-lm[9].x, lm[0].y-lm[9].y);
     function ratio(tip,mcp){ return Math.hypot(lm[tip].x-lm[mcp].x, lm[tip].y-lm[mcp].y)/dist01; }
@@ -567,9 +661,13 @@
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   function isPinch(lm){ const r=dist(lm[8],lm[4])/dist(lm[8],lm[6]); return r<pinchOn; }
   function isPinchOff(lm){ const r=dist(lm[8],lm[4])/dist(lm[8],lm[6]); return r>pinchOff; }
-  function mapToCanvas(lm,vid){ const srcW=vid.videoWidth||1280, srcH=vid.videoHeight||720; const sc=Math.max(OUT_W/srcW,OUT_H/srcH);
-    const dx=(OUT_W-srcW*sc)/2, dy=(OUT_H-srcH*sc)/2; let x=dx+lm.x*srcW*sc; const y=dy+lm.y*srcH*sc; if(mirror) x=OUT_W-x; return {x,y}; }
-
+  function mapToCanvas(lm,vid){
+    const srcW=vid.videoWidth||1280, srcH=vid.videoHeight||720; const sc=Math.max(OUT_W/srcW,OUT_H/srcH);
+    const dw=srcW*sc, dh=srcH*sc;
+    const dx=(OUT_W-dw)/2, dy=(OUT_H-dh)/2;
+    let x=dx+lm.x*dw; const y=dy+lm.y*dh;
+    if(mirror) x=OUT_W-x; return {x,y};
+  }
   function drawResetConfirm(ctx){
     const w=360,h=140,x=OUT_W/2-w/2,y=80;
     const ok={x:OUT_W/2-70,y:y+90,r:26}, no={x:OUT_W/2+70,y:y+90,r:26};
@@ -581,7 +679,6 @@
     ctx.fillStyle='#fff'; ctx.fillText('X', no.x, no.y+7);
     ctx.restore(); confirmButtons={ok,no};
   }
-
   function onHandsResults(res){
     const now=performance.now();
     lastHandsTs=now;
@@ -614,12 +711,7 @@
       const hit=airbarHit(p.x,p.y);
       if(hit){
         if(hit.type==='tool'){
-          if(hit.value==='reset'){
-            resetConfirm=true;
-          } else {
-            brush=hit.value;
-            updateBrushUI();
-          }
+          if(hit.value==='reset'){ resetConfirm=true; } else { brush=hit.value; updateBrushUI(); }
         }
         if(hit.type==='color'){ brushColor=hit.value; }
         airCooldown=now; pinching=false; pinchWas=false; return;
@@ -632,7 +724,6 @@
     }else if(!pinching && pinchWas){ endStroke(); }
     pinchWas=pinching;
   }
-
   function drawGlow(ctx){
     const now=performance.now();
     if(now>glowUntil || !glowPos) return;
@@ -643,6 +734,7 @@
     ctx.beginPath(); ctx.arc(glowPos.x,glowPos.y,r,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
 
+  // 오버레이 렌더
   function drawOverlay(ctx,activeVid){
     ctx.clearRect(0,0,OUT_W,OUT_H);
     drawAirbar(ctx);
@@ -660,12 +752,12 @@
     drawGlow(ctx);
   }
 
-  /* ========= Main Render Loop ========= */
+  // 메인 렌더 루프
   function render(){
     if(mode==='video'){ drawOverlay(oVid,video); }
     else{ drawOverlay(oCam,video2); drawOverlay(oDraw,video2); }
 
-    // Composite the final image for recording/saving (overlays are excluded)
+    // 녹화 합성
     rCtx.clearRect(0,0,OUT_W,OUT_H);
     if(mode==='video'){
       if(videoVisible){
@@ -680,7 +772,7 @@
     requestAnimationFrame(render);
   }
 
-  /* ========= Camera & MediaPipe Setup ========= */
+  // 카메라/미디어파이프
   function waitReady(v){ return new Promise(res=>{ if(v.readyState>=2) res(); else v.onloadedmetadata=()=>res(); }); }
   async function startUserMedia(){
     if(stream) return stream;
@@ -705,8 +797,6 @@
       throw e;
     }
   }
-
-  // --- Hands: Stability and Initialization ---
   function disposeHands(){
     if(handLoopId) cancelAnimationFrame(handLoopId);
     handLoopId=null; handBusy=false;
@@ -729,110 +819,148 @@
       handLoopId = requestAnimationFrame(loop);
     };
     handLoopId = requestAnimationFrame(loop);
-
-    // Watchdog to reset gesture state if hand tracking freezes
     watchdog=setInterval(()=>{ if(performance.now()-lastHandsTs>5000){ softResetGesture(); } }, 1500);
   }
   function softResetGesture(){ pinching=false; pinchWas=false; resetConfirm=false; lastLm=null; pinchXY=null; }
-
   $("#refreshHand").onclick=async()=>{ softResetGesture(); initHands(); statusEl.textContent='손 도구 새로고침 완료'; };
+  async function ensureCameraAndHands(){ await startUserMedia(); initHands(); }
 
-  async function ensureCameraAndHands(){
-    await startUserMedia();
-    initHands();
-  }
-
-  /* ========= Mode Switching & Toggles ========= */
-  async function startMode(nextMode){
-    mode=nextMode;
-    picker.classList.add('hide'); picker.setAttribute('aria-hidden','true'); picker.setAttribute('inert','');
-    app.style.display='grid';
-    $("#modeLabel").textContent=`모드: ${mode==='video'?'영상 위에 바로 그리기':'캔버스에 그리기'}`;
-    singleStage.style.display=(mode==='video')?'':'none';
-    dualStage.style.display=(mode==='canvas')?'':'none';
-    videoControls.style.display=(mode==='video')?'block':'none';
-    initSurfaces();
-    try{ await ensureCameraAndHands(); }catch(_e){}
-    if(mode==='video'){ videoVisible=true; $("#bgCanvas").style.display='none'; $("#badge1").textContent='핀치=그리기 · 상단에서 도구/색 선택'; }
-    pushHistory();
+  // ========== 화면 전환 유틸 ==========
+  function showModePicker(){
+    modePicker.classList.remove('hide');
+    modePicker.removeAttribute('inert');
+    modePicker.setAttribute('aria-hidden','false');
   }
   function showHome(){
-    picker.classList.remove('hide'); picker.removeAttribute('inert'); picker.setAttribute('aria-hidden','false');
+    devicePicker.classList.remove('hide'); devicePicker.removeAttribute('inert'); devicePicker.setAttribute('aria-hidden','false');
+    modePicker.classList.add('hide'); modePicker.setAttribute('aria-hidden','true'); modePicker.setAttribute('inert','');
     app.style.display='none';
-    const firstPick=picker.querySelector('.pick'); if(firstPick) firstPick.focus();
   }
-  $$('.pick').forEach(card=>{
+
+  // ========== 모드 시작 ==========
+  async function startMode(nextMode){
+    mode = nextMode;
+
+    // 모드 픽커 닫기
+    modePicker.classList.add('hide');
+    modePicker.setAttribute('aria-hidden','true');
+    modePicker.setAttribute('inert','');
+
+    // 레이아웃 표시 방식
+    app.style.display = isMobileLayout ? 'flex' : 'grid';
+
+    // 라벨 갱신
+    $("#modeLabel").textContent = `모드: ${mode === 'video' ? '영상 위에 바로 그리기' : '캔버스에 그리기'}`;
+
+    // display 명시
+    if (mode === 'video') {
+      singleStage.style.display = 'block';
+      dualStage.style.display   = 'none';
+      videoControls.style.display = 'block';
+      videoVisible = true;
+      $("#bgCanvas").style.display = 'none';
+      $("#badge1").textContent = '핀치=그리기 · 상단에서 도구/색 선택';
+    } else {
+      singleStage.style.display = 'none';
+      dualStage.style.display   = 'grid';
+      videoControls.style.display = 'none';
+    }
+
+    initSurfaces();
+
+    try { await ensureCameraAndHands(); } catch (_e) {}
+
+    pushHistory();
+    if (isMobileLayout) closeControlsOnMobile();
+  }
+
+  // ========= 모드 메뉴(4가지 중 선택) =========
+  function toggleModeMenu(show){
+    modeMenu.classList.toggle('open', show===undefined ? !modeMenu.classList.contains('open') : show);
+    modeMenu.setAttribute('aria-hidden', modeMenu.classList.contains('open') ? 'false' : 'true');
+  }
+  modeChangeBtn.addEventListener('click', ()=> toggleModeMenu());
+  modeLabel.addEventListener('click', ()=> toggleModeMenu());
+  document.addEventListener('click', (e)=>{
+    if(!modeMenu.contains(e.target) && e.target!==modeChangeBtn && e.target!==modeLabel){
+      toggleModeMenu(false);
+    }
+  });
+
+  function confirmAndSwitch(targetLayout, targetMode){
+    if(targetLayout===layout && targetMode===mode){ toggleModeMenu(false); return; }
+    const ok = window.confirm('모든 내용이 사라집니다. 실행하시겠습니까?');
+    if(!ok) return;
+    dCtx.clearRect(0,0,OUT_W,OUT_H);
+    dCtx2.clearRect(0,0,OUT_W,OUT_H);
+    applyLayout(targetLayout);
+    startMode(targetMode);
+    toggleModeMenu(false);
+  }
+
+  modeMenu.querySelectorAll('.item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [tLayout, tMode] = btn.dataset.go.split(':'); // 'desktop' | 'mobile' / 'video' | 'canvas'
+      confirmAndSwitch(tLayout, tMode);
+    });
+  });
+
+  // 버튼들
+  $$('#modePicker .pick').forEach(card=>{
     card.addEventListener('click', ()=> startMode(card.dataset.mode));
     card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') startMode(card.dataset.mode); });
   });
-  $("#changeMode").onclick=showHome;
+  const oldChangeBtn = $("#changeMode");
+  if (oldChangeBtn) oldChangeBtn.onclick = showHome;
   $("#logoBtn").onclick=(e)=>{ e.preventDefault(); showHome(); };
-
   $("#mirrorToggle").onclick=()=>{ mirror=!mirror; $("#mirrorToggle").textContent=`좌우반전: ${mirror?'켬':'끔'}`; [video,video2].forEach(v=>{ v.style.transform=mirror?'scaleX(-1)':'scaleX(1)'; }); };
   $("#camToggle").onclick=()=>{ if(mode!=='video') return; videoVisible=!videoVisible; $("#videoWrap").style.display=videoVisible?'':'none'; $("#bgCanvas").style.display=videoVisible?'none':''; $("#camToggle").textContent=videoVisible?'카메라 끄기':'카메라 켜기'; };
 
-  /* ========= Save/Record Functionality ========= */
+  // 저장/녹화
   const recToggle=$("#recToggle"), savePNG=$("#savePNG"), copyClipboard=$("#copyClipboard");
   let mediaRecorder=null;
-  let audioStreamForRecording = null; // To hold the audio stream during recording
-
+  let audioStreamForRecording = null;
   async function startRecording(){
     recCanvas.width=OUT_W; recCanvas.height=OUT_H;
     const canvasStream = recCanvas.captureStream(60);
-
-    // If audio is requested, get it and merge it.
     if ($("#audioToggle").checked) {
-        try {
-            // Get a new audio stream
-            audioStreamForRecording = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const audioTrack = audioStreamForRecording.getAudioTracks()[0];
-            if (audioTrack) {
-                canvasStream.addTrack(audioTrack);
-            }
-        } catch (e) {
-            console.error("Audio recording failed:", e);
-            statusEl.textContent = '오디오 실패(권한 확인)';
-            // Reset the checkbox if permission is denied
-            $("#audioToggle").checked = false;
-        }
+      try {
+        audioStreamForRecording = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioTrack = audioStreamForRecording.getAudioTracks()[0];
+        if (audioTrack) canvasStream.addTrack(audioTrack);
+      } catch (e) {
+        console.error("Audio recording failed:", e);
+        statusEl.textContent = '오디오 실패(권한 확인)';
+        $("#audioToggle").checked = false;
+      }
     }
-
     const mimeType = 'video/webm;codecs=vp9,opus';
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-        console.warn(`${mimeType} is not supported. Falling back.`);
-    }
-
+    if (!MediaRecorder.isTypeSupported(mimeType)) console.warn(`${mimeType} is not supported. Falling back.`);
     mediaRecorder=new MediaRecorder(canvasStream, { mimeType });
     const chunks=[];
     mediaRecorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
     mediaRecorder.onstop=()=>{
-        const blob=new Blob(chunks,{type:'video/webm'});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url;
-        a.download=`graffiti-${Date.now()}.webm`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        // Stop the audio track now that the blob is created.
-        if (audioStreamForRecording) {
-            audioStreamForRecording.getTracks().forEach(track => track.stop());
-            audioStreamForRecording = null;
-        }
-        // Also stop the video track from the canvas stream
-        canvasStream.getTracks().forEach(track => track.stop());
+      const blob=new Blob(chunks,{type:'video/webm'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download=`graffiti-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      if (audioStreamForRecording) { audioStreamForRecording.getTracks().forEach(track => track.stop()); audioStreamForRecording = null; }
+      canvasStream.getTracks().forEach(track => track.stop());
     };
     mediaRecorder.start();
     recToggle.textContent='■ 정지 & 저장';
     statusEl.textContent=$("#audioToggle").checked ? '오디오와 함께 녹화 중…' : '녹화 중…';
+    if(isMobileLayout) closeControlsOnMobile();
   }
-
   function stopRecording(){
     if(mediaRecorder){
-        mediaRecorder.stop(); // onstop will handle track cleanup
-        mediaRecorder=null;
-        recToggle.textContent='● 녹화 시작';
-        statusEl.textContent='녹화 종료';
+      mediaRecorder.stop();
+      mediaRecorder=null;
+      recToggle.textContent='● 녹화 시작';
+      statusEl.textContent='녹화 종료';
+      if(isMobileLayout) closeControlsOnMobile();
     }
   }
   recToggle.onclick=()=> recToggle.textContent.includes('녹화')?startRecording():stopRecording();
@@ -845,53 +973,52 @@
     }else{ c.drawImage(mode==='video'?bgCanvas:bgCanvas2,0,0); }
     c.drawImage(mode==='video'?drawCanvas:drawCanvas2,0,0); return out;
   }
-  savePNG.onclick=()=>{ const out=composeToImage(); out.toBlob((blob)=>{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`graffiti-${Date.now()}.png`; a.click(); URL.revokeObjectURL(url); },'image/png'); };
-  copyClipboard.onclick= async ()=>{ copyMsg.textContent=''; try{ const out=composeToImage(); const blob=await new Promise(res=>out.toBlob(res,'image/png')); await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); copyMsg.textContent='클립보드 복사 완료 ✅'; } catch(e){ copyMsg.textContent='복사 실패(HTTPS 권장, 권한 필요) ❌'; } };
+  savePNG.onclick=()=>{ const out=composeToImage(); out.toBlob((blob)=>{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`graffiti-${Date.now()}.png`; a.click(); URL.revokeObjectURL(url); },'image/png'); if(isMobileLayout) closeControlsOnMobile(); };
+  copyClipboard.onclick= async ()=>{ copyMsg.textContent=''; try{ const out=composeToImage(); const blob=await new Promise(res=>out.toBlob(res,'image/png')); await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); copyMsg.textContent='클립보드 복사 완료 ✅'; } catch(e){ copyMsg.textContent='복사 실패(HTTPS 권장, 권한 필요) ❌'; } if(isMobileLayout) closeControlsOnMobile(); };
 
-  /* ========= Surface & Pointer Init ========= */
+  // 캔버스 초기화 & 포인터 바인딩
   function initSurfaces(){
     [bgCanvas,drawCanvas,overlayVideo,bgCanvas2,drawCanvas2,overlayCam,overlayDraw,recCanvas].forEach(c=>{ if(c){ c.width=OUT_W; c.height=OUT_H; c.style.width='100%'; c.style.height='100%'; }});
     document.querySelectorAll('.airbar-bg').forEach(el=>el.style.setProperty('--airh', AIR_H+'px'));
     fillBackground(bgCtx,'#ffffff'); fillBackground(bgCtx2,'#ffffff');
   }
-  // Fallback for mouse/touch drawing
   function posInCanvas(evt, el){ const r=el.getBoundingClientRect(); return {x:(evt.clientX-r.left)*(OUT_W/r.width), y:(evt.clientY-r.top)*(OUT_H/r.height)}; }
-  function bindPointer(el, ctx){ let down=false; el.addEventListener('pointerdown',e=>{ if(performance.now()<inputLockUntil) return; down=true; const p=posInCanvas(e,el); beginStroke(ctx,p.x,p.y);}); el.addEventListener('pointermove',e=>{ if(!down) return; const p=posInCanvas(e,el); addPoint(p.x,p.y); }); window.addEventListener('pointerup',()=>{ if(down){down=false; endStroke();}}); }
+  function bindPointer(el, ctx){
+    let down=false;
+    el.addEventListener('pointerdown',e=>{ if(performance.now()<inputLockUntil) return; down=true; const p=posInCanvas(e,el); beginStroke(ctx,p.x,p.y);});
+    el.addEventListener('pointermove',e=>{ if(!down) return; const p=posInCanvas(e,el); addPoint(p.x,p.y); });
+    const up=()=>{ if(down){down=false; endStroke();}};
+    window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up);
+  }
   bindPointer(drawCanvas,dCtx); bindPointer(drawCanvas2,dCtx2);
 
-  // --- Initializer Function ---
+  // 초기화
   (function init(){
     initSurfaces();
     requestAnimationFrame(render);
-    
-    // Setup for collapsible sections dynamically
+
+    // 섹션 접힘 토글
     document.querySelectorAll('aside .group > h3').forEach(header => {
       header.classList.add('toggle-header');
-      
-      const arrow = document.createElement('span');
-      arrow.className = 'toggle-arrow';
-      arrow.innerHTML = '▼';
+      const arrow = document.createElement('span'); arrow.className='toggle-arrow'; arrow.innerHTML='▼';
       header.appendChild(arrow);
-
-      header.addEventListener('click', () => {
-        header.parentElement.classList.toggle('collapsed');
-      });
+      header.addEventListener('click', () => { header.parentElement.classList.toggle('collapsed'); });
     });
-
-    // Collapse some sections by default after they are created
     document.querySelectorAll('aside .group').forEach(group => {
-        const headerText = group.querySelector('h3').firstChild.textContent.trim();
-        if (['제어', '저장/공유', '카메라'].includes(headerText)) {
-            group.classList.add('collapsed');
-        }
+      const headerText = group.querySelector('h3').firstChild.textContent.trim();
+      if (['제어', '저장/공유', '카메라'].includes(headerText)) group.classList.add('collapsed');
     });
+    $('#expandAllBtn').addEventListener('click', () => { $$('aside .group').forEach(g => g.classList.remove('collapsed')); });
+    $('#collapseAllBtn').addEventListener('click', () => { $$('aside .group').forEach(g => g.classList.add('collapsed')); });
 
-    // Setup for Expand/Collapse All buttons
-    $('#expandAllBtn').addEventListener('click', () => {
-        $$('aside .group').forEach(group => group.classList.remove('collapsed'));
-    });
-    $('#collapseAllBtn').addEventListener('click', () => {
-        $$('aside .group').forEach(group => group.classList.add('collapsed'));
+    // 디바이스 선택
+    $$('#devicePicker .pick').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const dev = btn.dataset.device; // 'desktop' | 'mobile'
+        applyLayout(dev);
+        devicePicker.classList.add('hide'); devicePicker.setAttribute('aria-hidden','true'); devicePicker.setAttribute('inert','');
+        showModePicker();
+      });
     });
   })();
 })();

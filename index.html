@@ -15,6 +15,7 @@
          --primary:#3b82f6; --primary-hover:#2563eb; }
 
   *{ box-sizing:border-box; }
+  html,body{ height:100%; }
   body{
     margin:0; background:linear-gradient(145deg,#fdf2f8,#eff6ff);
     font-family:"Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -25,12 +26,13 @@
   .logo-img{ height:96px; width:auto; display:block; }
   @media (max-width:768px){ .logo-img{ height:72px; } }
 
-  /* 공통 픽커 */
+  /* ===== 픽커(디바이스/모드) =====
+     - 배경 완전 불투명
+     - 스크롤 잠금은 body.modal-open 로 제어 (JS) */
   #modePicker, #devicePicker{
     position:fixed; inset:0; display:grid; place-items:center;
-    background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.96));
-    backdrop-filter:blur(6px); z-index:1000; transition:opacity .18s ease;
-    padding:16px;
+    background:#fff; /* 불투명(뒤 화면 안 보이게) */
+    z-index:1000; transition:opacity .18s ease; padding:16px;
   }
   #modePicker.hide, #devicePicker.hide{ opacity:0; pointer-events:none; }
   .picker-wrap{ position:relative; z-index:1001; pointer-events:auto; display:grid; gap:24px; justify-items:center; width:min(980px, 100%); }
@@ -50,7 +52,11 @@
   .picker-footer a{ color:inherit; text-decoration:underline; }
   @media (min-width:768px){ .picker-grid{ grid-template-columns:1fr 1fr; } }
 
-  /* 데스크톱 기본 레이아웃 */
+  /* 디바이스/모드 픽커가 열려 있을 때: 스크롤 잠금 */
+  body.modal-open{ overflow:hidden; height:100dvh; }
+  @supports not (height: 100dvh) { body.modal-open{ height:100vh; } }
+
+  /* ===== 데스크톱 기본 레이아웃 ===== */
   .app{ display:grid; grid-template-columns:320px 1fr; gap:14px; padding:0 16px 16px; }
   @media (max-width:1100px){ .app{ grid-template-columns:1fr; } }
   aside, main{ background:#fff; border-radius:24px; box-shadow:var(--shadow); }
@@ -116,10 +122,20 @@
   .collapsible-content { max-height:1000px; overflow:hidden; transition:max-height .4s ease, margin-top .4s ease; margin-top:10px; }
   .group.collapsed .collapsible-content { max-height:0; margin-top:0; overflow:hidden; }
 
-  /* ========= 모바일 레이아웃(좌측 세로 툴바로 변경) ========= */
-  body.mobile-layout{ overflow:hidden; }
-  body.mobile-layout .app{ display:flex; flex-direction:column; flex-grow:1; min-height:0; position:relative; padding:0; gap:0; }
-  body.mobile-layout main{ flex-grow:1; padding:0 12px 12px; min-height:0; display:flex; align-items:center; justify-content:center; background:transparent; border-radius:0; box-shadow:none; }
+  /* ========= 모바일 레이아웃 ========= */
+  /* (1) 바디 스크롤 막지 않음 — 가로모드에서 화면이 작을 때 아래로 스크롤 가능 */
+  body.mobile-layout{ overflow:auto; min-height:100dvh; }
+
+  body.mobile-layout .app{
+    display:flex; flex-direction:column; flex-grow:1; min-height:100dvh;
+    position:relative; padding:0; gap:0; overflow:visible;
+  }
+  /* (2) 메인 영역은 스크롤 가능(기존 overflow:hidden 해제) */
+  body.mobile-layout main{
+    flex-grow:1; padding:0 12px 12px; min-height:0;
+    display:block; background:transparent; border-radius:0; box-shadow:none;
+    overflow:auto;
+  }
 
   /* 좌측 세로 패널 (슬라이드 인/아웃) */
   body.mobile-layout aside{
@@ -141,9 +157,9 @@
     box-shadow:0 8px 20px rgba(0,0,0,.2); cursor:pointer; z-index:501; transition:transform .2s ease;
   }
   #controlsToggleBtn:hover{ background:var(--primary-hover); transform:scale(1.05); }
-  body.mobile-layout #controlsToggleBtn{ display:grid; } /* 모바일 모드에서만 보이게 */
+  body.mobile-layout #controlsToggleBtn{ display:grid; }
 
-  /* 데스크톱 강제 스타일(모바일 클래스 아닐 때) */
+  /* 데스크톱 강제 스타일 */
   body.desktop-layout .app{ padding:0 16px 16px; gap:14px; }
   body.desktop-layout main{ background:#fff; border-radius:24px; box-shadow:var(--shadow); }
   body.desktop-layout footer{ display:block; }
@@ -441,6 +457,13 @@
   // 제스처 임계치
   let sens=0.7, pinchOn=0.65, pinchOff=0.74;
   function updateThreshold(){ pinchOn=0.30+sens*0.45; pinchOff=Math.min(pinchOn+0.07,0.92); } updateThreshold();
+
+  // ===== 픽커가 열려 있을 때 스크롤 잠금 토글 =====
+  function syncModalLock(){
+    const pickersOpen = !devicePicker.classList.contains('hide') ||
+                        !modePicker.classList.contains('hide');
+    document.body.classList.toggle('modal-open', pickersOpen);
+  }
 
   // ===== 레이아웃 적용 =====
   function applyLayout(next){
@@ -830,11 +853,13 @@
     modePicker.classList.remove('hide');
     modePicker.removeAttribute('inert');
     modePicker.setAttribute('aria-hidden','false');
+    syncModalLock();
   }
   function showHome(){
     devicePicker.classList.remove('hide'); devicePicker.removeAttribute('inert'); devicePicker.setAttribute('aria-hidden','false');
     modePicker.classList.add('hide'); modePicker.setAttribute('aria-hidden','true'); modePicker.setAttribute('inert','');
     app.style.display='none';
+    syncModalLock();
   }
 
   // ========== 모드 시작 ==========
@@ -845,6 +870,7 @@
     modePicker.classList.add('hide');
     modePicker.setAttribute('aria-hidden','true');
     modePicker.setAttribute('inert','');
+    syncModalLock(); // 픽커 닫혔으니 스크롤 해제
 
     // 레이아웃 표시 방식
     app.style.display = isMobileLayout ? 'flex' : 'grid';
@@ -1020,6 +1046,9 @@
         showModePicker();
       });
     });
+
+    // 진입 시 스크롤 잠금 상태 동기화
+    syncModalLock();
   })();
 })();
 </script>
